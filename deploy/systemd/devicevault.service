@@ -1,0 +1,24 @@
+[Unit]
+Description=DeviceVault API (FastAPI / uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=devicevault
+Group=devicevault
+WorkingDirectory=/opt/devicevault/backend
+EnvironmentFile=/opt/devicevault/backend/.env
+ExecStart=/opt/devicevault/backend/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 --port 8000 --workers 1 \
+    --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=3
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/opt/devicevault/backend
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,4 @@
+device_name,device_nickname,device_type,os_type,os_version,is_cellular,imei_number,serial_number,mac_address,company,status,purchase_date,assigned_user_email
+iPhone 15 Pro,Warehouse Phone A,phone,ios,17.5,true,356938035643810,SN-CSV-001,A1:B2:C3:D4:E5:01,Main Office,active,2024-08-01,manager@company.com
+Galaxy Tab A9,WiFi Tablet Floor 2,tablet_android,android,14,false,,SN-CSV-002,A1:B2:C3:D4:E5:02,Main Office,active,2024-09-12,
+Apple Watch SE,Security Watch,smartwatch,watchos,10.2,false,,SN-CSV-003,A1:B2:C3:D4:E5:03,Security Team,active,2023-12-01,admin@company.com

@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node / build
+node_modules/
+dist/
+
+# Local config & data
+.env
+*.db
+*.sqlite3
+*.log
+
+# nginx (Windows) runtime files
+deploy/windows/runtime/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

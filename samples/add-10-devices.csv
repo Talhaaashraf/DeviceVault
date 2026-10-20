@@ -1,0 +1,11 @@
+device_name,device_nickname,device_type,os_type,os_version,is_cellular,imei_number,serial_number,mac_address,company,status,purchase_date,assigned_user_email
+iPhone 13,Ops Desk Phone,phone,ios,16.7,true,356938035643821,SN-ADD-001,B1:B2:C3:D4:E5:01,Main Office,active,2023-04-10,manager@company.com
+Pixel 8,Field Android A,phone,android,14,true,490154203237529,SN-ADD-002,B1:B2:C3:D4:E5:02,Field Team,active,2024-02-18,
+iPad Air,Meeting Room iPad,tablet_ipad,ios,17.3,false,,SN-ADD-003,B1:B2:C3:D4:E5:03,Design Team,active,2023-09-01,viewer@company.com
+Galaxy Tab S8,Logistics Tablet,tablet_android,android,13,true,353918101234578,SN-ADD-004,B1:B2:C3:D4:E5:04,Field Team,active,2023-06-22,
+Apple Watch Ultra,Site Watch 1,smartwatch,watchos,10.1,true,359827104567801,SN-ADD-005,B1:B2:C3:D4:E5:05,Security Team,active,2024-01-05,admin@company.com
+iPhone SE,Spare Pool Phone,phone,ios,17.1,true,354281076543221,SN-ADD-006,B1:B2:C3:D4:E5:06,Main Office,active,2022-11-11,
+Pixel Watch,Wear Test Unit,smartwatch,wear_os,4.1,false,,SN-ADD-007,B1:B2:C3:D4:E5:07,QA Lab,in_repair,2023-08-08,
+iPad mini,Travel Tablet,tablet_ipad,ios,16.6,true,356938035643832,SN-ADD-008,B1:B2:C3:D4:E5:08,Design Team,active,2022-05-30,manager@company.com
+Galaxy A54,Temp Contractor Phone,phone,android,14,true,490154203237530,SN-ADD-009,B1:B2:C3:D4:E5:09,Main Office,active,2024-07-01,
+iPhone 11,Retired Loaner,phone,ios,15.8,true,354281076543232,SN-ADD-010,B1:B2:C3:D4:E5:0A,Legacy Pool,retired,2020-03-15,
