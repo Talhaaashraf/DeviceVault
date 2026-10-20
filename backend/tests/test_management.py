@@ -267,3 +267,46 @@ def test_allocations_summary(client, viewer_h, create_device):
     projects = {p["name"]: p for p in data["by_project"]}
     assert projects["Allocation Test Project"]["overdue_count"] == 1
     assert sum(loc["device_count"] for loc in data["by_location"]) == data["total_devices"]
+
+
+def test_review_only_accepts_approve_or_reject(client, viewer_h, manager_h):
+    req = client.post("/api/management/requests", json=_request_payload(), headers=viewer_h).json()
+    for bad in ("fulfilled", "pending"):
+        res = client.post(f"/api/management/requests/{req['id']}/review", json={"status": bad}, headers=manager_h)
+        assert res.status_code == 422
+
+
+def test_cannot_fulfil_rejected_or_already_fulfilled_request(client, viewer_h, manager_h, create_device):
+    rejected = client.post("/api/management/requests", json=_request_payload(), headers=viewer_h).json()
+    client.post(f"/api/management/requests/{rejected['id']}/review", json={"status": "rejected"}, headers=manager_h)
+    res = client.post(f"/api/management/requests/{rejected['id']}/fulfill", json={"device_id": create_device()["id"]},
+                      headers=manager_h)
+    assert res.status_code == 400
+
+    req = client.post("/api/management/requests", json=_request_payload(), headers=viewer_h).json()
+    first = client.post(f"/api/management/requests/{req['id']}/fulfill", json={"device_id": create_device()["id"]},
+                        headers=manager_h)
+    assert first.status_code == 200
+    again = client.post(f"/api/management/requests/{req['id']}/fulfill", json={"device_id": create_device()["id"]},
+                        headers=manager_h)
+    assert again.status_code == 400
+
+
+def test_cannot_fulfil_with_device_allocated_to_someone_else(client, viewer_h, manager_h, create_device):
+    manager = client.get("/api/auth/me", headers=manager_h).json()
+    assigned = create_device(assigned_user_id=manager["id"])
+    issued = create_device(issued_to="Field Engineer")
+    for device in (assigned, issued):
+        req = client.post("/api/management/requests", json=_request_payload(), headers=viewer_h).json()
+        res = client.post(f"/api/management/requests/{req['id']}/fulfill", json={"device_id": device["id"]},
+                          headers=manager_h)
+        assert res.status_code == 409
+
+
+def test_numeric_inputs_are_bounded(client, viewer_h, manager_h, create_device):
+    res = client.post("/api/management/requests", json=_request_payload(duration_days=10**9), headers=viewer_h)
+    assert res.status_code == 422
+    device = create_device()
+    res = client.post("/api/management/maintenance", headers=manager_h,
+                      json={"device_id": device["id"], "issue_title": "Negative", "estimated_cost": -1})
+    assert res.status_code == 422

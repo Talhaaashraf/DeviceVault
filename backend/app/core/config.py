@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
 import re
+import secrets
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -39,7 +42,11 @@ def os_freshness_category(os_type: str | None, os_version: str | None) -> str:
     return "Outdated"
 
 
-DEFAULT_SECRET_KEY = "change-me-in-production-use-a-long-random-string"
+# Placeholder from .env.example; never used to sign tokens (see _resolve_secret_key)
+DEFAULT_SECRET_KEY = "change-me-in-production-use-a-long-random-string"  # nosec B105
+
+# Where an auto-generated key is kept when none is configured (git-ignored)
+SECRET_KEY_FILE = Path(__file__).resolve().parents[2] / ".secret_key"
 
 
 class Settings(BaseSettings):
@@ -58,4 +65,26 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
 
+def _resolve_secret_key(configured: str, key_file: Path = SECRET_KEY_FILE) -> tuple[str, bool]:
+    """Return (key, auto_generated).
+
+    A missing or placeholder SECRET_KEY must never be used: anyone could forge tokens with the
+    published value. Instead a random key is generated once and persisted next to the backend.
+    """
+    if configured and configured != DEFAULT_SECRET_KEY:
+        return configured, False
+    if key_file.exists():
+        stored = key_file.read_text(encoding="utf-8").strip()
+        if stored:
+            return stored, True
+    key = secrets.token_urlsafe(48)
+    key_file.write_text(key, encoding="utf-8")
+    try:
+        os.chmod(key_file, 0o600)
+    except OSError:
+        pass
+    return key, True
+
+
 settings = Settings()
+settings.SECRET_KEY, SECRET_KEY_AUTO_GENERATED = _resolve_secret_key(settings.SECRET_KEY)

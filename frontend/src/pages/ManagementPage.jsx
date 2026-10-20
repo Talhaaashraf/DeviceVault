@@ -1162,10 +1162,10 @@ export default function ManagementPage() {
                 >
                   <option value="">-- Choose an available device --</option>
                   {devices
-                    .filter((d) => d.status === "active")
+                    .filter((d) => d.status === "active" && !d.assigned_user_id && !d.issued_to)
                     .map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.device_name} ({d.serial_number}) - {d.assigned_user ? `Assigned to ${d.assigned_user.full_name}` : "Available Pool"}
+                        {d.device_name} ({d.serial_number})
                       </option>
                     ))}
                 </select>

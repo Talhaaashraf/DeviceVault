@@ -204,8 +204,11 @@ Built in:
 - Short-lived access tokens (30 min) and **rotating** refresh tokens. Old refresh tokens are revoked on use, on logout, on password change and when an account is deactivated.
 - Role checks on every endpoint (admin / manager / viewer); admins cannot delete, deactivate or demote their own account.
 - nginx adds `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy`, hides its version, and rate-limits `/api/auth/login` to 10 attempts per minute per IP.
-- CSV uploads are limited to 5 MB; SQLite foreign keys are enforced.
-- The API logs a warning at startup if `SECRET_KEY` is the default or a demo account still has its published password.
+- Login takes the same time whether or not an email is registered, so accounts cannot be enumerated.
+- Workflow guards: only pending/approved requests can be fulfilled, a request can be fulfilled once, and a device already allocated to someone cannot be handed out again.
+- Input bounds on all numeric fields; CSV uploads are limited to 5 MB; SQLite foreign keys are enforced.
+- Dependabot (weekly) and CI (tests, build, `nginx -t`) run on GitHub with read-only permissions.
+- The placeholder `SECRET_KEY` is never used to sign tokens (a random key is generated instead), and the API warns at startup if a demo account still has its published password.
 
 Production checklist:
 
@@ -223,7 +226,7 @@ All settings are read from environment variables or `backend/.env` (see [backend
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DATABASE_URL` | `sqlite:///./device_inventory.db` | SQLAlchemy URL of the database file |
-| `SECRET_KEY` | *(insecure placeholder)* | **Required in production.** Signs JWTs. The API logs a warning if it is left at the default. |
+| `SECRET_KEY` | *(auto-generated)* | Signs JWTs. Set a long random value. If it is missing or still the `.env.example` placeholder, the API generates a random key, stores it in `backend/.secret_key` (git-ignored) and logs a warning — the published placeholder is never used. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | Access token lifetime |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | `7` | Refresh token lifetime |
 | `CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | Only needed if the frontend is hosted on a different origin |
@@ -296,7 +299,7 @@ Interactive Swagger docs: `/docs` (e.g. http://localhost:8000/docs, or through n
 
 ## Testing
 
-The backend has a pytest suite (73 tests) that exercises every endpoint against a throwaway SQLite database: authentication and token rotation, role permissions, device validation rules (IMEI/MAC, duplicates), assignment history, CSV import, the request → approval → fulfilment workflow, maintenance, returns, audits, allocations, the dashboard, and data integrity when users or devices are deleted.
+The backend has a pytest suite (79 tests) that exercises every endpoint against a throwaway SQLite database: authentication and token rotation, role permissions, device validation rules (IMEI/MAC, duplicates), assignment history, CSV import, the request → approval → fulfilment workflow, maintenance, returns, audits, allocations, the dashboard, and data integrity when users or devices are deleted.
 
 ```bash
 cd backend

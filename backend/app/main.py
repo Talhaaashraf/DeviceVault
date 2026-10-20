@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, devices, management, users
-from app.core.config import DEFAULT_SECRET_KEY, settings
+from app.core.config import SECRET_KEY_AUTO_GENERATED, SECRET_KEY_FILE, settings
 from app.db.base import Base
 from app.db.migrate_sqlite import ensure_sqlite_device_columns
 from app.db.seed import demo_accounts_with_default_password, seed_database
@@ -19,8 +19,10 @@ logger = logging.getLogger("uvicorn.error")
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    if settings.SECRET_KEY == DEFAULT_SECRET_KEY:
-        logger.warning("SECRET_KEY is the built-in default; set a random value in backend/.env for production.")
+    if SECRET_KEY_AUTO_GENERATED:
+        logger.warning("SECRET_KEY is not set; using a random key stored in %s. Set SECRET_KEY in backend/.env.", SECRET_KEY_FILE)
+    elif len(settings.SECRET_KEY) < 32:
+        logger.warning("SECRET_KEY is shorter than 32 characters; use a long random value.")
     if settings.DATABASE_URL.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
         ensure_sqlite_device_columns()

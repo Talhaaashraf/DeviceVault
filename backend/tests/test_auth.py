@@ -79,3 +79,30 @@ def test_logout_revokes_refresh_token(client):
     assert res.status_code == 204
     res = client.post("/api/auth/refresh", json={"refresh_token": data["refresh_token"]})
     assert res.status_code == 401
+
+
+def test_login_timing_does_not_reveal_registered_emails(client):
+    import time
+
+    def avg_ms(email):
+        start = time.perf_counter()
+        for _ in range(3):
+            client.post("/api/auth/login", json={"email": email, "password": "wrong-password"})
+        return (time.perf_counter() - start) / 3 * 1000
+
+    unknown, known = avg_ms("nobody.timing@company.com"), avg_ms("viewer@company.com")
+    # Both paths run one bcrypt check; without it the unknown-email path is ~50x faster
+    assert unknown > known * 0.5
+
+
+def test_placeholder_secret_key_is_never_used(tmp_path):
+    from app.core.config import DEFAULT_SECRET_KEY, _resolve_secret_key
+
+    key_file = tmp_path / ".secret_key"
+    key, generated = _resolve_secret_key(DEFAULT_SECRET_KEY, key_file)
+    assert generated and key != DEFAULT_SECRET_KEY and len(key) >= 32
+    # The generated key is persisted, so tokens survive restarts
+    assert _resolve_secret_key("", key_file) == (key, True)
+    # A configured key always wins
+    assert _resolve_secret_key("my-own-configured-secret-value-0123456789", key_file) == (
+        "my-own-configured-secret-value-0123456789", False)

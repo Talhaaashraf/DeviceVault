@@ -147,6 +147,11 @@ def fulfill_request(
     request_obj = db.get(DeviceRequest, request_id)
     if not request_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+    if request_obj.status not in (RequestStatus.pending, RequestStatus.approved):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Only pending or approved requests can be fulfilled (current status: {request_obj.status.value})",
+        )
 
     device = db.get(Device, payload.device_id)
     if not device:
@@ -155,10 +160,19 @@ def fulfill_request(
     if device.status != DeviceStatus.active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Device is not active (current status: {device.status})",
+            detail=f"Device is not active (current status: {device.status.value})",
         )
 
     requester = db.get(User, request_obj.user_id)
+    if requester is None or not requester.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Requester not found or inactive")
+    if (device.assigned_user_id not in (None, requester.id)) or (
+        device.assigned_user_id is None and device.issued_to
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Device is already allocated; process its return first",
+        )
     old_assigned_user = device.assigned_user_id
 
     # Allocate device to user

@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.enums import (
     DeviceType,
@@ -22,13 +22,21 @@ class DeviceRequestCreate(BaseModel):
     project_name: str = Field(min_length=1, max_length=255)
     division: str | None = None
     reason: str = Field(min_length=3)
-    duration_days: int | None = Field(default=30, ge=1)
+    duration_days: int | None = Field(default=30, ge=1, le=1825)  # up to 5 years
     date_needed: date | None = None
 
 
 class DeviceRequestReview(BaseModel):
     status: RequestStatus  # approved or rejected
     manager_notes: str | None = None
+
+    @field_validator("status")
+    @classmethod
+    def only_review_outcomes(cls, v: RequestStatus) -> RequestStatus:
+        # "fulfilled" is set only by the fulfil endpoint, which actually allocates a device
+        if v not in (RequestStatus.approved, RequestStatus.rejected):
+            raise ValueError("status must be 'approved' or 'rejected'")
+        return v
 
 
 class DeviceRequestFulfill(BaseModel):
@@ -68,7 +76,7 @@ class MaintenanceTicketCreate(BaseModel):
     issue_description: str | None = None
     priority: MaintenancePriority = MaintenancePriority.medium
     vendor_name: str | None = None
-    estimated_cost: float | None = 0.0
+    estimated_cost: float | None = Field(default=0.0, ge=0)
     sent_date: date | None = None
 
 
@@ -78,8 +86,8 @@ class MaintenanceTicketUpdate(BaseModel):
     priority: MaintenancePriority | None = None
     repair_status: MaintenanceStatus | None = None
     vendor_name: str | None = None
-    estimated_cost: float | None = None
-    actual_cost: float | None = None
+    estimated_cost: float | None = Field(default=None, ge=0)
+    actual_cost: float | None = Field(default=None, ge=0)
     sent_date: date | None = None
     completed_date: date | None = None
     technician_notes: str | None = None

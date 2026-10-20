@@ -110,7 +110,8 @@ def _get(row: dict, mapping: dict[str, str], key: str, default: str = "") -> str
 
 
 def _mac_from_serial(serial: str) -> str:
-    digest = hashlib.md5(serial.encode("utf-8")).hexdigest()[:12].upper()
+    # Not security-related: derives a stable placeholder MAC from the serial
+    digest = hashlib.md5(serial.encode("utf-8"), usedforsecurity=False).hexdigest()[:12].upper()
     return ":".join(digest[i : i + 2] for i in range(0, 12, 2))
 
 

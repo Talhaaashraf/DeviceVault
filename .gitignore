@@ -22,3 +22,6 @@ deploy/windows/runtime/
 Thumbs.db
 .vscode/
 .idea/
+
+# Auto-generated JWT signing key (used only when SECRET_KEY is not configured)
+backend/.secret_key
